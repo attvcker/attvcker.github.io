@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhookBuilder - Advanced Discord Webhook Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-bolt"></i>
+                    <span>WhookBuilder</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="importJson">
+                        <i class="fas fa-upload"></i>
+                        Импорт JSON
+                    </button>
+                    <button class="btn btn-secondary" id="exportJson">
+                        <i class="fas fa-download"></i>
+                        Экспорт JSON
+                    </button>
+                    <button class="btn btn-primary" id="clearAll">
+                        <i class="fas fa-trash"></i>
+                        Очистить всё
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h2>Редактор сообщения</h2>
+                </div>
+
+                <div class="editor-section">
+                    <div class="section-header">
+                        <i class="fas fa-comment"></i>
+                        <span>Основное содержимое</span>
+                    </div>
+                    
+                    <div class="field-group">
+                        <label for="messageContent">Текст сообщения</label>
+                        <textarea id="messageContent" placeholder="Введите текст сообщения..." maxlength="2000"></textarea>
+                        <div class="char-counter">
+                            <span id="contentCounter">0</span>/2000
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="username">Имя пользователя</label>
+                        <input type="text" id="username" placeholder="Имя бота">
+                    </div>
+
+                    <div class="field-group">
+                        <label for="avatarUrl">URL аватара</label>
+                        <input type="text" id="avatarUrl" placeholder="https://example.com/avatar.png">
+                    </div>
+                </div>
+
+                <div class="editor-section">
+                    <div class="section-header">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Эмбеды</span>
+                        <button class="btn btn-small btn-primary" id="addEmbed">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="embedsContainer"></div>
+                </div>
+
+                <div class="editor-section">
+                    <div class="section-header">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>Компоненты</span>
+                        <div class="component-buttons">
+                            <button class="btn btn-small btn-secondary" id="addButton">
+                                <i class="fas fa-hand-pointer"></i>
+                                Кнопка
+                            </button>
+                            <button class="btn btn-small btn-secondary" id="addSelect">
+                                <i class="fas fa-list"></i>
+                                Список
+                            </button>
+                        </div>
+                    </div>
+                    <div id="componentsContainer"></div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <h2>Предварительный просмотр</h2>
+                </div>
+                <div class="discord-preview">
+                    <div id="messagePreview" class="discord-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="watermark">
+            <span>iconics db</span>
+        </div>
+    </div>
+
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Импорт JSON</h3>
+                <button class="modal-close" id="closeImportModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea id="importTextarea" placeholder="Вставьте JSON данные здесь..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelImport">Отмена</button>
+                <button class="btn btn-primary" id="confirmImport">Импортировать</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="actionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Настройка действия</h3>
+                <button class="modal-close" id="closeActionModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label for="actionType">Тип действия</label>
+                    <select id="actionType">
+                        <option value="url">Переход по ссылке</option>
+                        <option value="role">Выдача роли</option>
+                        <option value="channel">Создание канала</option>
+                        <option value="message">Отправка сообщения</option>
+                        <option value="kick">Кик пользователя</option>
+                        <option value="ban">Бан пользователя</option>
+                        <option value="timeout">Таймаут</option>
+                        <option value="custom">Кастомное действие</option>
+                    </select>
+                </div>
+                <div id="actionParams"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAction">Отмена</button>
+                <button class="btn btn-primary" id="confirmAction">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <script src="script.js"></script>
+</body>
+</html>
