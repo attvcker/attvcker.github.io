@@ -9,6 +9,8 @@ class WhookBuilder {
         };
         
         this.currentEditingComponent = null;
+        this.previewUpdateTimeout = null;
+        this.lastPreviewData = null;
         this.init();
     }
 
@@ -21,17 +23,17 @@ class WhookBuilder {
         document.getElementById('messageContent').addEventListener('input', (e) => {
             this.data.content = e.target.value;
             this.updateCharCounter(e.target, 'contentCounter');
-            this.updatePreview();
+            this.debouncedUpdatePreview();
         });
 
         document.getElementById('username').addEventListener('input', (e) => {
             this.data.username = e.target.value;
-            this.updatePreview();
+            this.debouncedUpdatePreview();
         });
 
         document.getElementById('avatarUrl').addEventListener('input', (e) => {
             this.data.avatar_url = e.target.value;
-            this.updatePreview();
+            this.debouncedUpdatePreview();
         });
 
         document.getElementById('addEmbed').addEventListener('click', () => {
@@ -149,11 +151,11 @@ class WhookBuilder {
                 <div class="embed-content" id="embed-${index}">
                     <div class="field-group">
                         <label>Заголовок</label>
-                        <input type="text" value="${embed.title}" onchange="app.updateEmbed(${index}, 'title', this.value)" placeholder="Заголовок эмбеда">
+                        <input type="text" value="${embed.title}" oninput="app.updateEmbed(${index}, 'title', this.value)" placeholder="Заголовок эмбеда">
                     </div>
                     <div class="field-group">
                         <label>Описание</label>
-                        <textarea onchange="app.updateEmbed(${index}, 'description', this.value)" placeholder="Описание эмбеда">${embed.description}</textarea>
+                        <textarea oninput="app.updateEmbed(${index}, 'description', this.value)" placeholder="Описание эмбеда">${embed.description}</textarea>
                     </div>
                     <div class="field-group">
                         <label>Цвет</label>
@@ -165,26 +167,26 @@ class WhookBuilder {
                     <div class="field-row">
                         <div class="field-group">
                             <label>URL миниатюры</label>
-                            <input type="text" value="${embed.thumbnail.url}" onchange="app.updateEmbed(${index}, 'thumbnail', {url: this.value})" placeholder="https://example.com/image.png">
+                            <input type="text" value="${embed.thumbnail.url}" oninput="app.updateEmbed(${index}, 'thumbnail', {url: this.value})" placeholder="https://example.com/image.png">
                         </div>
                         <div class="field-group">
                             <label>URL изображения</label>
-                            <input type="text" value="${embed.image.url}" onchange="app.updateEmbed(${index}, 'image', {url: this.value})" placeholder="https://example.com/image.png">
+                            <input type="text" value="${embed.image.url}" oninput="app.updateEmbed(${index}, 'image', {url: this.value})" placeholder="https://example.com/image.png">
                         </div>
                     </div>
                     <div class="field-group">
                         <label>Автор</label>
                         <div class="field-row">
-                            <input type="text" value="${embed.author.name}" onchange="app.updateEmbedAuthor(${index}, 'name', this.value)" placeholder="Имя автора">
-                            <input type="text" value="${embed.author.icon_url}" onchange="app.updateEmbedAuthor(${index}, 'icon_url', this.value)" placeholder="URL иконки">
+                            <input type="text" value="${embed.author.name}" oninput="app.updateEmbedAuthor(${index}, 'name', this.value)" placeholder="Имя автора">
+                            <input type="text" value="${embed.author.icon_url}" oninput="app.updateEmbedAuthor(${index}, 'icon_url', this.value)" placeholder="URL иконки">
                         </div>
-                        <input type="text" value="${embed.author.url}" onchange="app.updateEmbedAuthor(${index}, 'url', this.value)" placeholder="URL ссылки">
+                        <input type="text" value="${embed.author.url}" oninput="app.updateEmbedAuthor(${index}, 'url', this.value)" placeholder="URL ссылки">
                     </div>
                     <div class="field-group">
                         <label>Подвал</label>
                         <div class="field-row">
-                            <input type="text" value="${embed.footer.text}" onchange="app.updateEmbedFooter(${index}, 'text', this.value)" placeholder="Текст подвала">
-                            <input type="text" value="${embed.footer.icon_url}" onchange="app.updateEmbedFooter(${index}, 'icon_url', this.value)" placeholder="URL иконки">
+                            <input type="text" value="${embed.footer.text}" oninput="app.updateEmbedFooter(${index}, 'text', this.value)" placeholder="Текст подвала">
+                            <input type="text" value="${embed.footer.icon_url}" oninput="app.updateEmbedFooter(${index}, 'icon_url', this.value)" placeholder="URL иконки">
                         </div>
                     </div>
                     <div class="field-group">
@@ -216,7 +218,7 @@ class WhookBuilder {
                 <div class="field-row">
                     <div class="field-group" style="margin: 0;">
                         <label>Название поля</label>
-                        <input type="text" value="${field.name}" onchange="app.updateEmbedField(${embedIndex}, ${fieldIndex}, 'name', this.value)" placeholder="Название поля">
+                        <input type="text" value="${field.name}" oninput="app.updateEmbedField(${embedIndex}, ${fieldIndex}, 'name', this.value)" placeholder="Название поля">
                     </div>
                     <div style="display: flex; align-items: end; gap: 0.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
@@ -230,7 +232,7 @@ class WhookBuilder {
                 </div>
                 <div class="field-group" style="margin-top: 0.5rem; margin-bottom: 0;">
                     <label>Значение</label>
-                    <textarea onchange="app.updateEmbedField(${embedIndex}, ${fieldIndex}, 'value', this.value)" placeholder="Значение поля" style="min-height: 80px;">${field.value}</textarea>
+                    <textarea oninput="app.updateEmbedField(${embedIndex}, ${fieldIndex}, 'value', this.value)" placeholder="Значение поля" style="min-height: 80px;">${field.value}</textarea>
                 </div>
             </div>
         `).join('');
@@ -247,28 +249,28 @@ class WhookBuilder {
         } else {
             this.data.embeds[index][property] = value;
         }
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     updateEmbedColor(index, color) {
         const hex = color.replace('#', '');
         this.data.embeds[index].color = parseInt(hex, 16);
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     updateEmbedAuthor(index, property, value) {
         this.data.embeds[index].author[property] = value;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     updateEmbedFooter(index, property, value) {
         this.data.embeds[index].footer[property] = value;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     updateEmbedTimestamp(index, show) {
         this.data.embeds[index].timestamp = show ? new Date().toISOString() : null;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     addEmbedField(embedIndex) {
@@ -283,7 +285,7 @@ class WhookBuilder {
 
     updateEmbedField(embedIndex, fieldIndex, property, value) {
         this.data.embeds[embedIndex].fields[fieldIndex][property] = value;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     removeEmbedField(embedIndex, fieldIndex) {
@@ -394,7 +396,7 @@ class WhookBuilder {
             <div class="component-content" id="button-${compIndex}-${itemIndex}">
                 <div class="field-group">
                     <label>Текст кнопки</label>
-                    <input type="text" value="${button.label}" onchange="app.updateButton(${compIndex}, ${itemIndex}, 'label', this.value)" placeholder="Текст кнопки">
+                    <input type="text" value="${button.label}" oninput="app.updateButton(${compIndex}, ${itemIndex}, 'label', this.value)" placeholder="Текст кнопки">
                 </div>
                 <div class="field-group">
                     <label>Стиль</label>
@@ -415,7 +417,7 @@ class WhookBuilder {
                 ${button.style === 5 ? `
                     <div class="field-group">
                         <label>URL ссылки</label>
-                        <input type="text" value="${button.url || ''}" onchange="app.updateButton(${compIndex}, ${itemIndex}, 'url', this.value)" placeholder="https://example.com">
+                        <input type="text" value="${button.url || ''}" oninput="app.updateButton(${compIndex}, ${itemIndex}, 'url', this.value)" placeholder="https://example.com">
                     </div>
                 ` : ''}
             </div>
@@ -438,7 +440,7 @@ class WhookBuilder {
             <div class="component-content" id="select-${compIndex}-${itemIndex}">
                 <div class="field-group">
                     <label>Плейсхолдер</label>
-                    <input type="text" value="${select.placeholder}" onchange="app.updateSelect(${compIndex}, ${itemIndex}, 'placeholder', this.value)" placeholder="Выберите опцию...">
+                    <input type="text" value="${select.placeholder}" oninput="app.updateSelect(${compIndex}, ${itemIndex}, 'placeholder', this.value)" placeholder="Выберите опцию...">
                 </div>
                 <div class="field-row">
                     <div class="field-group">
@@ -472,16 +474,16 @@ class WhookBuilder {
                 <div class="field-row">
                     <div class="field-group" style="margin: 0;">
                         <label>Название</label>
-                        <input type="text" value="${option.label}" onchange="app.updateSelectOption(${compIndex}, ${itemIndex}, ${optionIndex}, 'label', this.value)" placeholder="Название опции">
+                        <input type="text" value="${option.label}" oninput="app.updateSelectOption(${compIndex}, ${itemIndex}, ${optionIndex}, 'label', this.value)" placeholder="Название опции">
                     </div>
                     <div class="field-group" style="margin: 0;">
                         <label>Значение</label>
-                        <input type="text" value="${option.value}" onchange="app.updateSelectOption(${compIndex}, ${itemIndex}, ${optionIndex}, 'value', this.value)" placeholder="option_value">
+                        <input type="text" value="${option.value}" oninput="app.updateSelectOption(${compIndex}, ${itemIndex}, ${optionIndex}, 'value', this.value)" placeholder="option_value">
                     </div>
                 </div>
                 <div class="field-group" style="margin-top: 0.5rem;">
                     <label>Описание</label>
-                    <input type="text" value="${option.description || ''}" onchange="app.updateSelectOption(${compIndex}, ${itemIndex}, ${optionIndex}, 'description', this.value)" placeholder="Описание опции">
+                    <input type="text" value="${option.description || ''}" oninput="app.updateSelectOption(${compIndex}, ${itemIndex}, ${optionIndex}, 'description', this.value)" placeholder="Описание опции">
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
                     <button class="btn btn-small btn-secondary" onclick="app.editSelectOptionAction(${compIndex}, ${itemIndex}, ${optionIndex})">
@@ -512,12 +514,12 @@ class WhookBuilder {
         }
 
         this.renderComponents();
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     updateSelect(compIndex, itemIndex, property, value) {
         this.data.components[compIndex].components[itemIndex][property] = value;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     addSelectOption(compIndex, itemIndex) {
@@ -543,7 +545,7 @@ class WhookBuilder {
 
     updateSelectOption(compIndex, itemIndex, optionIndex, property, value) {
         this.data.components[compIndex].components[itemIndex].options[optionIndex][property] = value;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
     }
 
     removeSelectOption(compIndex, itemIndex, optionIndex) {
@@ -750,6 +752,13 @@ class WhookBuilder {
     }
 
     updatePreview() {
+        // Проверяем, изменились ли данные для предотвращения лишних обновлений
+        const currentDataString = JSON.stringify(this.data);
+        if (this.lastPreviewData === currentDataString) {
+            return;
+        }
+        this.lastPreviewData = currentDataString;
+
         const preview = document.getElementById('messagePreview');
         let html = '';
 
@@ -781,6 +790,17 @@ class WhookBuilder {
         }
 
         preview.innerHTML = html;
+    }
+
+    // Дебаунсинг обновления предпросмотра для производительности
+    debouncedUpdatePreview() {
+        if (this.previewUpdateTimeout) {
+            clearTimeout(this.previewUpdateTimeout);
+        }
+        
+        this.previewUpdateTimeout = setTimeout(() => {
+            this.updatePreview();
+        }, 100); // 100мс задержка для оптимизации производительности
     }
 
     formatDiscordContent(content) {
