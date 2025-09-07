@@ -167,26 +167,26 @@ class WhookBuilder {
                     <div class="field-row">
                         <div class="field-group">
                             <label>URL миниатюры</label>
-                            <input type="text" value="${embed.thumbnail.url}" oninput="app.updateEmbed(${index}, 'thumbnail', {url: this.value})" placeholder="https://example.com/image.png">
+                            <input type="text" value="${embed.thumbnail ? embed.thumbnail.url || '' : ''}" oninput="app.updateEmbed(${index}, 'thumbnail', {url: this.value})" placeholder="https://example.com/image.png">
                         </div>
                         <div class="field-group">
                             <label>URL изображения</label>
-                            <input type="text" value="${embed.image.url}" oninput="app.updateEmbed(${index}, 'image', {url: this.value})" placeholder="https://example.com/image.png">
+                            <input type="text" value="${embed.image ? embed.image.url || '' : ''}" oninput="app.updateEmbed(${index}, 'image', {url: this.value})" placeholder="https://example.com/image.png">
                         </div>
                     </div>
                     <div class="field-group">
                         <label>Автор</label>
                         <div class="field-row">
-                            <input type="text" value="${embed.author.name}" oninput="app.updateEmbedAuthor(${index}, 'name', this.value)" placeholder="Имя автора">
-                            <input type="text" value="${embed.author.icon_url}" oninput="app.updateEmbedAuthor(${index}, 'icon_url', this.value)" placeholder="URL иконки">
+                            <input type="text" value="${embed.author ? embed.author.name || '' : ''}" oninput="app.updateEmbedAuthor(${index}, 'name', this.value)" placeholder="Имя автора">
+                            <input type="text" value="${embed.author ? embed.author.icon_url || '' : ''}" oninput="app.updateEmbedAuthor(${index}, 'icon_url', this.value)" placeholder="URL иконки">
                         </div>
-                        <input type="text" value="${embed.author.url}" oninput="app.updateEmbedAuthor(${index}, 'url', this.value)" placeholder="URL ссылки">
+                        <input type="text" value="${embed.author ? embed.author.url || '' : ''}" oninput="app.updateEmbedAuthor(${index}, 'url', this.value)" placeholder="URL ссылки">
                     </div>
                     <div class="field-group">
                         <label>Подвал</label>
                         <div class="field-row">
-                            <input type="text" value="${embed.footer.text}" oninput="app.updateEmbedFooter(${index}, 'text', this.value)" placeholder="Текст подвала">
-                            <input type="text" value="${embed.footer.icon_url}" oninput="app.updateEmbedFooter(${index}, 'icon_url', this.value)" placeholder="URL иконки">
+                            <input type="text" value="${embed.footer ? embed.footer.text || '' : ''}" oninput="app.updateEmbedFooter(${index}, 'text', this.value)" placeholder="Текст подвала">
+                            <input type="text" value="${embed.footer ? embed.footer.icon_url || '' : ''}" oninput="app.updateEmbedFooter(${index}, 'icon_url', this.value)" placeholder="URL иконки">
                         </div>
                     </div>
                     <div class="field-group">
@@ -259,11 +259,17 @@ class WhookBuilder {
     }
 
     updateEmbedAuthor(index, property, value) {
+        if (!this.data.embeds[index].author) {
+            this.data.embeds[index].author = { name: '', icon_url: '', url: '' };
+        }
         this.data.embeds[index].author[property] = value;
         this.debouncedUpdatePreview();
     }
 
     updateEmbedFooter(index, property, value) {
+        if (!this.data.embeds[index].footer) {
+            this.data.embeds[index].footer = { text: '', icon_url: '' };
+        }
         this.data.embeds[index].footer[property] = value;
         this.debouncedUpdatePreview();
     }
