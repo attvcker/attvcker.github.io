@@ -938,8 +938,8 @@ class WhookBuilder {
                     content: importedData.content || '',
                     username: importedData.username || '',
                     avatar_url: importedData.avatar_url || '',
-                    embeds: importedData.embeds || [],
-                    components: importedData.components || []
+                    embeds: Array.isArray(importedData.embeds) ? importedData.embeds : [],
+                    components: Array.isArray(importedData.components) ? importedData.components : []
                 };
 
                 document.getElementById('messageContent').value = this.data.content;
