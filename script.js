@@ -512,11 +512,17 @@ class WhookBuilder {
         const button = this.data.components[compIndex].components[itemIndex];
         button[property] = value;
 
-        if (property === 'style' && value !== 5 && button.url) {
-            delete button.url;
-            button.custom_id = `button_${Date.now()}`;
-        } else if (property === 'style' && value === 5 && button.custom_id) {
-            delete button.custom_id;
+        if (property === 'style' && value !== 5) {
+            if (button.url) {
+                delete button.url;
+            }
+            if (!button.custom_id) {
+                button.custom_id = `button_${Date.now()}`;
+            }
+        } else if (property === 'style' && value === 5) {
+            if (button.custom_id) {
+                delete button.custom_id;
+            }
         }
 
         this.renderComponents();
@@ -939,7 +945,7 @@ class WhookBuilder {
                     username: importedData.username || '',
                     avatar_url: importedData.avatar_url || '',
                     embeds: Array.isArray(importedData.embeds) ? importedData.embeds : [],
-                    components: Array.isArray(importedData.components) ? importedData.components : []
+                    components: Array.isArray(importedData.components) ? this.processComponents(importedData.components) : []
                 };
 
                 document.getElementById('messageContent').value = this.data.content;
@@ -958,6 +964,35 @@ class WhookBuilder {
         } catch (error) {
             this.showNotification('Ошибка при импорте JSON: ' + error.message, 'error');
         }
+    }
+
+    processComponents(components) {
+        return components.map(component => {
+            if (component.type === 1 && component.components) {
+                return {
+                    ...component,
+                    components: component.components.map(item => {
+                        if (item.type === 2) {
+                            return {
+                                ...item,
+                                custom_id: item.custom_id || `button_${Date.now()}`,
+                                action: item.action || { type: 'url', params: {} }
+                            };
+                        } else if (item.type === 3) {
+                            return {
+                                ...item,
+                                options: Array.isArray(item.options) ? item.options.map(option => ({
+                                    ...option,
+                                    action: option.action || { type: 'role', params: {} }
+                                })) : []
+                            };
+                        }
+                        return item;
+                    })
+                };
+            }
+            return component;
+        });
     }
 
     exportJson() {
