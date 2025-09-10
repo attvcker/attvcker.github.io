@@ -213,6 +213,7 @@ class WhookBuilder {
     }
 
     renderEmbedFields(fields, embedIndex) {
+        if (!fields || !Array.isArray(fields)) return '';
         return fields.map((field, fieldIndex) => `
             <div class="embed-field-item" style="background: var(--background); padding: 1rem; margin-bottom: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
                 <div class="field-row">
@@ -280,6 +281,9 @@ class WhookBuilder {
     }
 
     addEmbedField(embedIndex) {
+        if (!this.data.embeds[embedIndex].fields) {
+            this.data.embeds[embedIndex].fields = [];
+        }
         this.data.embeds[embedIndex].fields.push({
             name: 'Поле',
             value: 'Значение',
@@ -290,12 +294,17 @@ class WhookBuilder {
     }
 
     updateEmbedField(embedIndex, fieldIndex, property, value) {
+        if (!this.data.embeds[embedIndex].fields) {
+            this.data.embeds[embedIndex].fields = [];
+        }
         this.data.embeds[embedIndex].fields[fieldIndex][property] = value;
         this.debouncedUpdatePreview();
     }
 
     removeEmbedField(embedIndex, fieldIndex) {
-        this.data.embeds[embedIndex].fields.splice(fieldIndex, 1);
+        if (this.data.embeds[embedIndex].fields) {
+            this.data.embeds[embedIndex].fields.splice(fieldIndex, 1);
+        }
         this.renderEmbeds();
         this.updatePreview();
     }
@@ -512,17 +521,11 @@ class WhookBuilder {
         const button = this.data.components[compIndex].components[itemIndex];
         button[property] = value;
 
-        if (property === 'style' && value !== 5) {
-            if (button.url) {
-                delete button.url;
-            }
-            if (!button.custom_id) {
-                button.custom_id = `button_${Date.now()}`;
-            }
-        } else if (property === 'style' && value === 5) {
-            if (button.custom_id) {
-                delete button.custom_id;
-            }
+        if (property === 'style' && value !== 5 && button.url) {
+            delete button.url;
+            button.custom_id = `button_${Date.now()}`;
+        } else if (property === 'style' && value === 5 && button.custom_id) {
+            delete button.custom_id;
         }
 
         this.renderComponents();
@@ -857,7 +860,7 @@ class WhookBuilder {
             html += `<img src="${embed.thumbnail.url}" alt="" class="embed-thumbnail">`;
         }
 
-        if (embed.fields && embed.fields.length > 0) {
+        if (embed.fields && Array.isArray(embed.fields) && embed.fields.length > 0) {
             html += '<div class="embed-fields">';
             embed.fields.forEach(field => {
                 html += `<div class="embed-field${field.inline ? ' inline' : ''}">`;
@@ -944,8 +947,8 @@ class WhookBuilder {
                     content: importedData.content || '',
                     username: importedData.username || '',
                     avatar_url: importedData.avatar_url || '',
-                    embeds: Array.isArray(importedData.embeds) ? importedData.embeds : [],
-                    components: Array.isArray(importedData.components) ? this.processComponents(importedData.components) : []
+                    embeds: importedData.embeds || [],
+                    components: importedData.components || []
                 };
 
                 document.getElementById('messageContent').value = this.data.content;
@@ -964,35 +967,6 @@ class WhookBuilder {
         } catch (error) {
             this.showNotification('Ошибка при импорте JSON: ' + error.message, 'error');
         }
-    }
-
-    processComponents(components) {
-        return components.map(component => {
-            if (component.type === 1 && component.components) {
-                return {
-                    ...component,
-                    components: component.components.map(item => {
-                        if (item.type === 2) {
-                            return {
-                                ...item,
-                                custom_id: item.custom_id || `button_${Date.now()}`,
-                                action: item.action || { type: 'url', params: {} }
-                            };
-                        } else if (item.type === 3) {
-                            return {
-                                ...item,
-                                options: Array.isArray(item.options) ? item.options.map(option => ({
-                                    ...option,
-                                    action: option.action || { type: 'role', params: {} }
-                                })) : []
-                            };
-                        }
-                        return item;
-                    })
-                };
-            }
-            return component;
-        });
     }
 
     exportJson() {
@@ -1029,7 +1003,7 @@ class WhookBuilder {
                 if (embed.footer.icon_url) cleanEmbed.footer.icon_url = embed.footer.icon_url;
             }
             if (embed.timestamp) cleanEmbed.timestamp = embed.timestamp;
-            if (embed.fields && embed.fields.length > 0) {
+            if (embed.fields && Array.isArray(embed.fields) && embed.fields.length > 0) {
                 cleanEmbed.fields = embed.fields.filter(field => field.name && field.value);
             }
             
