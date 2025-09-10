@@ -213,7 +213,6 @@ class WhookBuilder {
     }
 
     renderEmbedFields(fields, embedIndex) {
-        if (!fields || !Array.isArray(fields)) return '';
         return fields.map((field, fieldIndex) => `
             <div class="embed-field-item" style="background: var(--background); padding: 1rem; margin-bottom: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
                 <div class="field-row">
@@ -281,9 +280,6 @@ class WhookBuilder {
     }
 
     addEmbedField(embedIndex) {
-        if (!this.data.embeds[embedIndex].fields) {
-            this.data.embeds[embedIndex].fields = [];
-        }
         this.data.embeds[embedIndex].fields.push({
             name: 'Поле',
             value: 'Значение',
@@ -294,17 +290,12 @@ class WhookBuilder {
     }
 
     updateEmbedField(embedIndex, fieldIndex, property, value) {
-        if (!this.data.embeds[embedIndex].fields) {
-            this.data.embeds[embedIndex].fields = [];
-        }
         this.data.embeds[embedIndex].fields[fieldIndex][property] = value;
         this.debouncedUpdatePreview();
     }
 
     removeEmbedField(embedIndex, fieldIndex) {
-        if (this.data.embeds[embedIndex].fields) {
-            this.data.embeds[embedIndex].fields.splice(fieldIndex, 1);
-        }
+        this.data.embeds[embedIndex].fields.splice(fieldIndex, 1);
         this.renderEmbeds();
         this.updatePreview();
     }
@@ -860,7 +851,7 @@ class WhookBuilder {
             html += `<img src="${embed.thumbnail.url}" alt="" class="embed-thumbnail">`;
         }
 
-        if (embed.fields && Array.isArray(embed.fields) && embed.fields.length > 0) {
+        if (embed.fields && embed.fields.length > 0) {
             html += '<div class="embed-fields">';
             embed.fields.forEach(field => {
                 html += `<div class="embed-field${field.inline ? ' inline' : ''}">`;
@@ -1003,7 +994,7 @@ class WhookBuilder {
                 if (embed.footer.icon_url) cleanEmbed.footer.icon_url = embed.footer.icon_url;
             }
             if (embed.timestamp) cleanEmbed.timestamp = embed.timestamp;
-            if (embed.fields && Array.isArray(embed.fields) && embed.fields.length > 0) {
+            if (embed.fields && embed.fields.length > 0) {
                 cleanEmbed.fields = embed.fields.filter(field => field.name && field.value);
             }
             
